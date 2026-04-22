@@ -958,11 +958,22 @@ function importAreas(input){
 }
 function resetAreas(){
   if(!confirm('¿Restaurar todas las áreas a los valores predefinidos? Se perderán los cambios actuales.')) return;
-  // Deep copy preset back into working objects
-  Object.keys(areas).forEach(k=>delete areas[k]);
-  Object.keys(areaColors).forEach(k=>delete areaColors[k]);
-  Object.assign(areas, JSON.parse(JSON.stringify(PRESET_AREAS)));
-  Object.assign(areaColors, JSON.parse(JSON.stringify(PRESET_AREA_COLORS)));
+  // Borrar todo y reasignar desde DEFAULT_AREAS (misma fuente que la columna "predefinida")
+  Object.keys(areas).forEach(k => delete areas[k]);
+  Object.keys(areaColors).forEach(k => delete areaColors[k]);
+  preloadDefaultAreas();
+  // Forzar sobreescritura de todos los CPs con el valor predefinido
+  SCENARIOS_DATA.forEach(sc => {
+    Object.keys(sc.centros).forEach(centro => {
+      const defMap = DEFAULT_AREAS[centro] || {};
+      const k = areaKey(sc.id, centro);
+      if(!areas[k]) areas[k] = {};
+      for(const cp of (sc.centros[centro] || [])){
+        const defArea = defMap[cp];
+        if(defArea) areas[k][cp] = defArea;
+      }
+    });
+  });
   renderAssignTable(); renderSummary(); if(mapAreas) redrawMapAreas();
 }
 
